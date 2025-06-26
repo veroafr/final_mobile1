@@ -34,8 +34,9 @@ A aplicação é composta por:
 ### 1. 🐘 Backend (Spring Boot)
 
 ```bash
-# Navegue até o diretório do projeto backend
-cd backend
 
 # Execute o projeto com Maven
 ./mvnw spring-boot:run
+
+# Execute Flutter
+flutter run
