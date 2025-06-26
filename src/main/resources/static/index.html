@@ -1,0 +1,118 @@
+<!-- Comandos para iniciar spring boot: cd demo , mvn spring-boot:run iniciar docker images , ejecutar con live server -->
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Pet Shop - Gerenciar Pets</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    h1 { color: #4CAF50; }
+    input, button { margin: 5px; padding: 5px; width: calc(100% - 12px); }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    button { cursor: pointer;}
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Animais de Estimação</h1>
+
+  <form id="petForm">
+    <input type="hidden" id="id">
+    <input type="text" id="nome" placeholder="Nome" required>
+    <input type="text" id="tipo" placeholder="Tipo (cachorro, gato)" required>
+    <input type="text" id="raca" placeholder="Raça" required>
+    <input type="number" id="idade" placeholder="Idade" required>
+    <input type="text" id="dono" placeholder="Dono" required>
+    <button type="submit">Salvar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th><th>Tipo</th><th>Raça</th><th>Idade</th><th>Dono</th><th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="petTable"></tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('petForm');
+    const table = document.getElementById('petTable');
+    const API_URL = 'http://localhost:8080/pets';
+
+    async function fetchPets() {
+      try {
+        const res = await fetch(API_URL);
+        const pets = await res.json();
+        table.innerHTML = '';
+        pets.forEach(pet => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${pet.nome}</td>
+            <td>${pet.tipo}</td>
+            <td>${pet.raca}</td>
+            <td>${pet.idade}</td>
+            <td>${pet.dono}</td>
+            <td>
+              <button class="edit-btn">Editar</button>
+              <button onclick="deletePet(${pet.id})">Excluir</button>
+            </td>`;
+          table.appendChild(row);
+
+          // Adiciona evento ao botão de editar
+          row.querySelector('.edit-btn').addEventListener('click', () => {
+            editPet(pet);
+          });
+        });
+      } catch (err) {
+        console.error("Erro ao buscar pets:", err);
+        alert("Erro ao conectar com a API");
+      }
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const pet = {
+        nome: form.nome.value,
+        tipo: form.tipo.value,
+        raca: form.raca.value,
+        idade: parseInt(form.idade.value),
+        dono: form.dono.value
+      };
+
+      const id = form.id.value;
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${API_URL}/${id}` : API_URL;
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pet)
+      });
+
+      form.reset();
+      fetchPets();
+    };
+
+    function editPet(pet) {
+      form.id.value = pet.id;
+      form.nome.value = pet.nome;
+      form.tipo.value = pet.tipo;
+      form.raca.value = pet.raca;
+      form.idade.value = pet.idade;
+      form.dono.value = pet.dono;
+    }
+
+    async function deletePet(id) {
+      if (confirm('Tem certeza que deseja excluir este pet?')) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        fetchPets();
+      }
+    }
+
+    fetchPets();
+  </script>
+</body>
+</html>
